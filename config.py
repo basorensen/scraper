@@ -1,5 +1,6 @@
 class Config(object):
     """This is a description of Config"""
+    BESTBUY_API_PATH = "../bestbuy_apikey.txt"
     BESTBUY_URL_BASE = "https://api.bestbuy.com/v1/products"
     BESTBUY_MAX_RESULTS = 100
     BESTBUY_RESP_FILTER = ['name', 'salePrice']
@@ -20,3 +21,8 @@ class Config(object):
         "Accept-Language": "en-US,en;q=0.8",
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
     }
+
+    def readBestbuyAPIKey(self):
+        file = open(Config.BESTBUY_API_PATH, 'r')
+        key = file.read().strip()
+        return key

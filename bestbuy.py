@@ -7,9 +7,11 @@ def is_digital_download(name):
     return "[Digital Download" in name
 
 def get_onsale_products():
+    apikey = Config.readBestbuyAPIKey()
+
     url = Config.BESTBUY_URL_BASE + \
           Config.BESTBUY_CATPATH + \
-          "?apiKey=" + Config.BESTBUY_API + \
+          "?apiKey=" + apikey + \
           "&show=" + ','.join(Config.BESTBUY_RESP_FILTER) + \
           "&format=json"
     resp_raw = requests.get(url)
