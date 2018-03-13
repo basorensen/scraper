@@ -28,45 +28,22 @@ def get_first_link_in_search_results(resp):
 
     return link_result.link
 
-def get_product_details(page_resp):
-    while True:
-        sleep(1)
-        try:
-            doc = html.fromstring(page_resp.content)
-            XPATH_NAME = '//h1[@id="title"]//text()'
-            XPATH_SALE_PRICE = '//span[contains(@id,"ourprice") or contains(@id,"saleprice")]/text()'
-            XPATH_ORIGINAL_PRICE = '//td[contains(text(),"List Price") or contains(text(),"M.R.P") or contains(text(),"Price")]/following-sibling::td/text()'
-            XPATH_CATEGORY = '//a[@class="a-link-normal a-color-tertiary"]//text()'
-            XPATH_AVAILABILITY = '//div[@id="availability"]//text()'
+def make_othersellers_url(asin):
+    return Config.AMAZON_OTHERSELLERS_URL_BASE + asin + Config.AMAZON_OTHERSELLERS_URL_ARGS
 
-            RAW_NAME = doc.xpath(XPATH_NAME)
-            RAW_SALE_PRICE = doc.xpath(XPATH_SALE_PRICE)
-            RAW_CATEGORY = doc.xpath(XPATH_CATEGORY)
-            RAW_ORIGINAL_PRICE = doc.xpath(XPATH_ORIGINAL_PRICE)
-            RAw_AVAILABILITY = doc.xpath(XPATH_AVAILABILITY)
+def extract_asin(url):
+    start_index = url.index(Config.AMAZON_PRODUCTLINK_URL_PIVOT) + len(Config.AMAZON_PRODUCTLINK_URL_PIVOT)
+    end_index = url.index("/", start_index)
+    asin = url[start_index:end_index]
+    return asin
 
-            NAME = ' '.join(''.join(RAW_NAME).split()) if RAW_NAME else None
-            SALE_PRICE = ' '.join(''.join(RAW_SALE_PRICE).split()).strip() if RAW_SALE_PRICE else None
-            CATEGORY = ' > '.join([i.strip() for i in RAW_CATEGORY]) if RAW_CATEGORY else None
-            ORIGINAL_PRICE = ''.join(RAW_ORIGINAL_PRICE).strip() if RAW_ORIGINAL_PRICE else None
-            AVAILABILITY = ''.join(RAw_AVAILABILITY).strip() if RAw_AVAILABILITY else None
-
-            if not ORIGINAL_PRICE:
-                ORIGINAL_PRICE = SALE_PRICE
-
-            if page_resp.status_code != 200:
-                raise ValueError('captcha')
-            data = {
-                'NAME': NAME,
-                'SALE_PRICE': SALE_PRICE,
-                'CATEGORY': CATEGORY,
-                'ORIGINAL_PRICE': ORIGINAL_PRICE,
-                'AVAILABILITY': AVAILABILITY
-            }
-
-            return data
-        except Exception as e:
-            print e
+def get_bestseller_rank(resp):
+    html = resp.content
+    pivot = html.index(Config.AMAZON_SELLERRANK_PIVOT)
+    numb_start = html.rfind("#", 0, pivot) + 1
+    numb_end = html.find(" ", numb_start)
+    rank = html[numb_start:numb_end]
+    return rank
 
 def do_search(query):
     escaped_query = urllib.quote(query)
@@ -77,9 +54,21 @@ def do_search(query):
     if search_resp.status_code != 200:
         raise RuntimeError("server returned error on search")
     link = get_first_link_in_search_results(search_resp)
-    page_resp = requests.get(link, headers=Config.REQ_HEADERS)
-    if page_resp.status_code != 200:
+
+    #get lowest price
+    asin = extract_asin(link)
+    othersellers_url = make_othersellers_url(asin)
+    othersellers_resp = requests.get(othersellers_url, headers=Config.REQ_HEADERS)
+    if othersellers_resp.status_code != 200:
+        raise RuntimeError("server returned error on othersellers page")
+
+    #get seller's rank
+    product_resp = requests.get(link, headers=Config.REQ_HEADERS)
+    if product_resp.status_code != 200:
         raise RuntimeError("server returned error on product page")
-    product_details = get_product_details(page_resp)
+    rank = get_bestseller_rank(product_resp)
+
+
+    #product_details = get_product_details(page_resp)
 
 

@@ -14,6 +14,11 @@ class Config(object):
                       "))))))"
     AMAZON_SEARCH_URL_BASE = "https://www.amazon.com/s/ref=nb_sb_noss?field-keywords="
     AMAZON_SEARCH_PIVOT = "s-color-twister-title-link"
+    AMAZON_OTHERSELLERS_URL_BASE = "https://www.amazon.com/gp/offer-listing/"
+    AMAZON_OTHERSELLERS_URL_ARGS = "/ref=dp_olp_all_mbc?ie=UTF8&f_all=true&f_new=true"
+    AMAZON_PRODUCTLINK_URL_PIVOT = "/dp/"
+    AMAZON_SELLERRANK_PIVOT = "in Video Games"
+
 
     REQ_HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
