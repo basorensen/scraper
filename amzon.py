@@ -31,6 +31,60 @@ def get_first_link_in_search_results(resp):
 def make_othersellers_url(asin):
     return Config.AMAZON_OTHERSELLERS_URL_BASE + asin + Config.AMAZON_OTHERSELLERS_URL_ARGS
 
+def parse_price(html, dollar_index):
+    index = dollar_index + 1
+    numstr = ""
+    while html[index].isnumeric() or html[index] == ".":
+        numstr = numstr + html[index]
+
+    return float(numstr)
+
+def is_amazon_seller(html):
+    seller_index = html.index(Config.AMAZON_OTHERSELLERS_SELLERINFO_PIVOT)
+    seller_end = html.index(Config.AMAZON_OTHERSELLERS_SELLERINFO_END_PIVOT, seller_index)
+    try:
+        amazon_index = html.index(Config.AMAZON_OTHERSELLERS_PROPRIETARY_TAG, seller_index)
+        if amazon_index < seller_end:
+            return True
+        else:
+            return False
+    except:
+        return False
+
+
+def get_price(html, pivot_index):
+    dollar_index = html.index("$", pivot_index)
+    ending_index = html.index("</span>", pivot_index)
+    if dollar_index > ending_index:
+        return 0
+    return parse_price(html, dollar_index)
+
+def get_othersellers_lowest_prices(resp):
+
+    html = resp.content
+    if is_amazon_seller(html):
+        return [-1, -1, -1]
+
+    prices = [0, 0, 0] #main, shipping, tax
+
+    offer_start = html.index("a-spacing-mini olpOffer")
+    offer_end = html.index("</p>", offer_start)
+
+    mainprice_index = html.index(Config.AMAZON_OTHERSELLERS_OFFERPRICE_PIVOT, offer_start)
+    if mainprice_index > offer_end:
+        return prices
+    prices[0] = get_price(html, mainprice_index)
+
+    shippingprice_index = html.index(Config.AMAZON_OTHERSELLERS_SHIPPINGPRICE_PIVOT, offer_start)
+    if shippingprice_index < offer_end:
+        prices[1] = get_price(html, shippingprice_index)
+
+    taxprice_index = html.index(Config.AMAZON_OTHERSELLERS_TAXPRICE_PIVOT, offer_start)
+    if taxprice_index < offer_end:
+        prices[2] = get_price(html, taxprice_index)
+
+    return prices
+
 def extract_asin(url):
     start_index = url.index(Config.AMAZON_PRODUCTLINK_URL_PIVOT) + len(Config.AMAZON_PRODUCTLINK_URL_PIVOT)
     end_index = url.index("/", start_index)
@@ -47,8 +101,8 @@ def get_bestseller_rank(resp):
 
 def do_search(query):
     escaped_query = urllib.quote(query)
-    #resp_html = requests.get(Config.AMAZON_SEARCH_URL_BASE + escaped_query)
-    url = "https://www.amazon.com/mn/search/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=The+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&rh=i%3Aaps%2Ck%3AThe+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&fromHash=https%3A%2F%2Fwww.amazon.com%2Fs%2Fref%3Dnb_sb_noss%3Furl%3Dsearch-alias%253Daps%26field-keywords%3DThe%2BLegend%2Bof%2BZelda%253A%2BBreath%2Bof%2Bthe%2BWild%2B-%2BNintendo%2BSwitch&section=BTF&fromApp=gp%2Fsearch&fromPage=results&fromPageConstruction=auisearch&version=2&oqid=1520218159&atfLayout=list&originalQid=1520217955"
+    url = Config.AMAZON_SEARCH_URL_BASE + escaped_query
+    #url = "https://www.amazon.com/mn/search/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=The+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&rh=i%3Aaps%2Ck%3AThe+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&fromHash=https%3A%2F%2Fwww.amazon.com%2Fs%2Fref%3Dnb_sb_noss%3Furl%3Dsearch-alias%253Daps%26field-keywords%3DThe%2BLegend%2Bof%2BZelda%253A%2BBreath%2Bof%2Bthe%2BWild%2B-%2BNintendo%2BSwitch&section=BTF&fromApp=gp%2Fsearch&fromPage=results&fromPageConstruction=auisearch&version=2&oqid=1520218159&atfLayout=list&originalQid=1520217955"
 
     search_resp = requests.get(url, headers=Config.REQ_HEADERS)
     if search_resp.status_code != 200:
@@ -57,17 +111,27 @@ def do_search(query):
 
     #get lowest price
     asin = extract_asin(link)
+    print("ASIN is: " + asin)
     othersellers_url = make_othersellers_url(asin)
     othersellers_resp = requests.get(othersellers_url, headers=Config.REQ_HEADERS)
     if othersellers_resp.status_code != 200:
         raise RuntimeError("server returned error on othersellers page")
+    prices = get_othersellers_lowest_prices(othersellers_resp)
+    if prices[0] == -1:
+        print("Amazon was seller, didn't calculate price.")
+    else:
+        print("Main price: " + str(prices[0]))
+        print("Shipping price: " + str(prices[1]))
+        print("Tax price: " + str(prices[2]))
+        print("Total price: " + str(prices[0] + prices[1] + prices[2]))
+
 
     #get seller's rank
     product_resp = requests.get(link, headers=Config.REQ_HEADERS)
     if product_resp.status_code != 200:
         raise RuntimeError("server returned error on product page")
     rank = get_bestseller_rank(product_resp)
-
+    print("Rank is: " + rank)
 
     #product_details = get_product_details(page_resp)
 

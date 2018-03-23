@@ -15,10 +15,16 @@ class Config(object):
     AMAZON_SEARCH_URL_BASE = "https://www.amazon.com/s/ref=nb_sb_noss?field-keywords="
     AMAZON_SEARCH_PIVOT = "s-color-twister-title-link"
     AMAZON_OTHERSELLERS_URL_BASE = "https://www.amazon.com/gp/offer-listing/"
-    AMAZON_OTHERSELLERS_URL_ARGS = "/ref=dp_olp_all_mbc?ie=UTF8&f_all=true&f_new=true"
+    AMAZON_OTHERSELLERS_URL_ARGS = "/ref=dp_olp_all_mbc?ie=UTF8&f_all=true&f_new=true&sort=taxsip"
     AMAZON_PRODUCTLINK_URL_PIVOT = "/dp/"
     AMAZON_SELLERRANK_PIVOT = "in Video Games"
 
+    AMAZON_OTHERSELLERS_PROPRIETARY_TAG = "alt=\"Amazon.com\""
+    AMAZON_OTHERSELLERS_SELLERINFO_PIVOT = "olpSellerName"
+    AMAZON_OTHERSELLERS_SELLERINFO_END_PIVOT = "</h3>"
+    AMAZON_OTHERSELLERS_OFFERPRICE_PIVOT = "olpOfferPrice"
+    AMAZON_OTHERSELLERS_SHIPPINGPRICE_PIVOT = "olpShippingPrice"
+    AMAZON_OTHERSELLERS_TAXPRICE_PIVOT = "olpEstimatedTaxText"
 
     REQ_HEADERS = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",

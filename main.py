@@ -3,6 +3,7 @@ import amzon
 
 try:
     #bestbuy.get_onsale_products()
-    amzon.do_search("The Legend of Zelda: Breath of the Wild - Nintendo Switch")
+    title = "Super Mario Odyssey - Nintendo Switch"
+    amzon.do_search(title)
 except Exception as e:
     print(e.message)
