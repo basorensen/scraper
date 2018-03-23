@@ -5,13 +5,12 @@ class Config(object):
     BESTBUY_MAX_RESULTS = 100
     BESTBUY_RESP_FILTER = ['name', 'salePrice']
 
-    BESTBUY_CATPATH = "(onSale=true" \
-                      "&(platform=Xbox%20One" \
+    BESTBUY_CATPATH = "(platform=Xbox%20One" \
                       "|(platform=psp" \
                       "|(platform=PlayStation%204" \
                       "|(platform=Nintendo%203DS" \
                       "|(platform=Wii%20U" \
-                      "))))))"
+                      ")))))"
     AMAZON_SEARCH_URL_BASE = "https://www.amazon.com/s/ref=nb_sb_noss?field-keywords="
     AMAZON_SEARCH_PIVOT = "s-color-twister-title-link"
     AMAZON_OTHERSELLERS_URL_BASE = "https://www.amazon.com/gp/offer-listing/"
@@ -33,7 +32,8 @@ class Config(object):
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
     }
 
-    def readBestbuyAPIKey(self):
+    @staticmethod
+    def readBestbuyAPIKey():
         file = open(Config.BESTBUY_API_PATH, 'r')
         key = file.read().strip()
         return key

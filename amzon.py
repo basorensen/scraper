@@ -34,8 +34,9 @@ def make_othersellers_url(asin):
 def parse_price(html, dollar_index):
     index = dollar_index + 1
     numstr = ""
-    while html[index].isnumeric() or html[index] == ".":
+    while html[index].isdigit() or html[index] == ".":
         numstr = numstr + html[index]
+        index = index + 1
 
     return float(numstr)
 
@@ -70,18 +71,30 @@ def get_othersellers_lowest_prices(resp):
     offer_start = html.index("a-spacing-mini olpOffer")
     offer_end = html.index("</p>", offer_start)
 
-    mainprice_index = html.index(Config.AMAZON_OTHERSELLERS_OFFERPRICE_PIVOT, offer_start)
-    if mainprice_index > offer_end:
-        return prices
-    prices[0] = get_price(html, mainprice_index)
+    try:
+        mainprice_index = html.index(Config.AMAZON_OTHERSELLERS_OFFERPRICE_PIVOT, offer_start)
+        if mainprice_index > offer_end:
+            print("mainprice_index wastoo big.")
+            return prices
+        prices[0] = get_price(html, mainprice_index)
+    except Exception as e:
+        print("Error in mainprice_index: " + e.message)
+        
+    try:
+        shippingprice_index = html.index(Config.AMAZON_OTHERSELLERS_SHIPPINGPRICE_PIVOT, offer_start)
+        if shippingprice_index < offer_end:
+            prices[1] = get_price(html, shippingprice_index)
+    except Exception as e:
+        print("Error in shippingprice_index: " + e.message)
 
-    shippingprice_index = html.index(Config.AMAZON_OTHERSELLERS_SHIPPINGPRICE_PIVOT, offer_start)
-    if shippingprice_index < offer_end:
-        prices[1] = get_price(html, shippingprice_index)
 
-    taxprice_index = html.index(Config.AMAZON_OTHERSELLERS_TAXPRICE_PIVOT, offer_start)
-    if taxprice_index < offer_end:
-        prices[2] = get_price(html, taxprice_index)
+    try:
+        taxprice_index = html.index(Config.AMAZON_OTHERSELLERS_TAXPRICE_PIVOT, offer_start)
+        if taxprice_index < offer_end:
+            prices[2] = get_price(html, taxprice_index)
+    except Exception as e:
+        print("Error in taxprice_index: " + e.message)
+
 
     return prices
 
@@ -113,6 +126,7 @@ def do_search(query):
     asin = extract_asin(link)
     print("ASIN is: " + asin)
     othersellers_url = make_othersellers_url(asin)
+    print("Amazon URL: " + othersellers_url)
     othersellers_resp = requests.get(othersellers_url, headers=Config.REQ_HEADERS)
     if othersellers_resp.status_code != 200:
         raise RuntimeError("server returned error on othersellers page")
@@ -130,8 +144,11 @@ def do_search(query):
     product_resp = requests.get(link, headers=Config.REQ_HEADERS)
     if product_resp.status_code != 200:
         raise RuntimeError("server returned error on product page")
-    rank = get_bestseller_rank(product_resp)
-    print("Rank is: " + rank)
+    try:
+        rank = get_bestseller_rank(product_resp)
+        print("Rank is: " + rank)
+    except:
+        print("Rank was not found.")
 
     #product_details = get_product_details(page_resp)
 
