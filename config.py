@@ -1,3 +1,4 @@
+import random
 class Config(object):
     """This is a description of Config"""
     BESTBUY_API_PATH = "../bestbuy_apikey.txt"
@@ -25,16 +26,44 @@ class Config(object):
     AMAZON_OTHERSELLERS_SHIPPINGPRICE_PIVOT = "olpShippingPrice"
     AMAZON_OTHERSELLERS_TAXPRICE_PIVOT = "olpEstimatedTaxText"
 
-    REQ_HEADERS = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, sdch, br",
-        "Accept-Language": "en-US,en;q=0.8",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
-    }
+    REQ_HEADERS_LIST = [
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
+        },
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:53.0) Gecko/20100101 Firefox/53.0",
+        },
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.79 Safari/537.36 Edge/14.14393"
+        },
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "User-Agent": "Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko"
+        },
+        {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Encoding": "gzip, deflate, sdch, br",
+            "Accept-Language": "en-US,en;q=0.8",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 6.0.1; SAMSUNG SM-N910F Build/MMB29M) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/44.0.2403.133 Mobile Safari/537.36"
+        }
+    ]
 
-    PROXYLIST = {
-        "http": "http://50.233.137.32:80"
-    }
+    @staticmethod
+    def get_next_header():
+        index = random.randint(0, len(Config.REQ_HEADERS_LIST) - 1)
+        head = Config.REQ_HEADERS_LIST[index]
+        return head
 
     @staticmethod
     def readBestbuyAPIKey():

@@ -1,7 +1,7 @@
 from config import Config
 import requests
 import simplejson as json
-
+from game import Game
 
 def is_digital_download(name):
     return "[Digital" in name
@@ -21,6 +21,6 @@ def get_onsale_products(page):
     for product in resp_parsed["products"]:
         if is_digital_download(product["name"]): continue
 
-        real_products.append(product)
+        real_products.append(Game("BestBuy", product["name"], product["salePrice"], ""))
 
     return real_products

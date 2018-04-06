@@ -4,6 +4,7 @@ from config import Config
 from proxy import Proxy
 from time import sleep
 from lxml import html
+from game import Game
 
 class LinkResult(object):
     """Contains the link and the end index."""
@@ -23,6 +24,9 @@ def find_link(html, start_index):
 
 def get_first_link_in_search_results(resp):
     html = resp.content
+    if "Robot Check" in html:
+        raise EnvironmentError("CAPTCHA :(")
+
     link_result = find_link(html, 0)
     if "picasso" in link_result.link: #skip advertisement
         link_result = find_link(html, link_result.end_index + 1)
@@ -64,6 +68,9 @@ def get_price(html, pivot_index):
 def get_othersellers_lowest_prices(resp):
 
     html = resp.content
+    if "Robot Check" in html:
+        raise EnvironmentError("CAPTCHA :(")
+
     if is_amazon_seller(html):
         return [-1, -1, -1]
 
@@ -112,6 +119,8 @@ def extract_asin(url):
 
 def get_bestseller_rank(resp):
     html = resp.content
+    if "Robot Check" in html:
+        raise EnvironmentError("CAPTCHA :(")
     pivot = html.index(Config.AMAZON_SELLERRANK_PIVOT)
     numb_start = html.rfind("#", 0, pivot) + 1
     numb_end = html.find(" ", numb_start)
@@ -124,9 +133,9 @@ def do_search(query):
     print("Search URL: " + url)
     #url = "https://www.amazon.com/mn/search/ref=nb_sb_noss?url=search-alias%3Daps&field-keywords=The+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&rh=i%3Aaps%2Ck%3AThe+Legend+of+Zelda%3A+Breath+of+the+Wild+-+Nintendo+Switch&fromHash=https%3A%2F%2Fwww.amazon.com%2Fs%2Fref%3Dnb_sb_noss%3Furl%3Dsearch-alias%253Daps%26field-keywords%3DThe%2BLegend%2Bof%2BZelda%253A%2BBreath%2Bof%2Bthe%2BWild%2B-%2BNintendo%2BSwitch&section=BTF&fromApp=gp%2Fsearch&fromPage=results&fromPageConstruction=auisearch&version=2&oqid=1520218159&atfLayout=list&originalQid=1520217955"
 
-    search_resp = requests.get(url, headers=Config.REQ_HEADERS, proxies=Proxy.get_next_proxy())
+    search_resp = requests.get(url, headers=Config.get_next_header(), proxies=Proxy.get_next_proxy())
     if search_resp.status_code != 200:
-        raise RuntimeError("server returned error on search")
+        raise EnvironmentError("server returned error on search")
     link = get_first_link_in_search_results(search_resp)
 
     #get lowest price
@@ -134,29 +143,32 @@ def do_search(query):
     print("ASIN is: " + asin)
     othersellers_url = make_othersellers_url(asin)
     print("Amazon URL: " + othersellers_url)
-    othersellers_resp = requests.get(othersellers_url, headers=Config.REQ_HEADERS, proxies=Proxy.get_next_proxy())
+    othersellers_resp = requests.get(othersellers_url, headers=Config.get_next_header(), proxies=Proxy.get_next_proxy())
     if othersellers_resp.status_code != 200:
-        raise RuntimeError("server returned error on othersellers page")
+        raise EnvironmentError("server returned error on othersellers page")
     prices = get_othersellers_lowest_prices(othersellers_resp)
+    total_price = str(prices[0] + prices[1] + prices[2])
     if prices[0] == -1:
         print("Amazon was seller, didn't calculate price.")
     else:
         print("Main price: " + str(prices[0]))
         print("Shipping price: " + str(prices[1]))
         print("Tax price: " + str(prices[2]))
-        print("Total price: " + str(prices[0] + prices[1] + prices[2]))
+        print("Total price: " + total_price)
 
 
     #get seller's rank
-    product_resp = requests.get(link, headers=Config.REQ_HEADERS, proxies=Proxy.get_next_proxy())
+    rank = ""
+    product_resp = requests.get(link, headers=Config.get_next_header(), proxies=Proxy.get_next_proxy())
     if product_resp.status_code != 200:
-        raise RuntimeError("server returned error on product page")
+        raise EnvironmentError("server returned error on product page")
     try:
         rank = get_bestseller_rank(product_resp)
         print("Rank is: " + rank)
     except:
         print("Rank was not found.")
 
+    return Game("Amazon",query, total_price, rank)
     #product_details = get_product_details(page_resp)
 
 
